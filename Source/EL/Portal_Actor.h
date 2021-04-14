@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "PortalManager.h"
+#include "Components/BoxComponent.h"
 #include "Portal_Actor.generated.h"
 
 UCLASS()
@@ -55,9 +57,15 @@ public:
     UFUNCTION(BlueprintCallable, Category = "APortal_Actor|Portal")
         void TeleportActor(AActor* ActorToTeleport);
 
-    FRotator ConvertRotationToActorSpace(FRotator Rotation, AActor* Reference, AActor* TargetActor);
+    FRotator ConvertRotationToActorSpace(FRotator Rotation, AActor* Reference);
 
-    FVector ConvertLocationToActorSpace(FVector Location, AActor* Reference, AActor* TargetActor);
+    UFUNCTION(BlueprintCallable, Category = "APortal_Actor|Portal")
+        bool IsPointInsideBox(FVector Point, UBoxComponent* Box);
+
+    UFUNCTION(BlueprintCallable, Category = "APortal_Actor|Portal")
+        APortalManager* GetPortalManager(AActor* Context);
+
+    FVector ConvertLocationToActorSpace(FVector Location, AActor* Reference);
 
 
 protected:
@@ -72,4 +80,5 @@ private:
     //Used for Tracking movement of a point
     FVector LastPosition;
     bool    LastInFront;
+
 };

@@ -7,6 +7,7 @@
 #include "Components/InputComponent.h"
 #include "GameFramework/InputSettings.h"
 #include "Kismet/GameplayStatics.h"
+#include "Player_Controller.h"
 
 APlayer_Character::APlayer_Character()
 {
@@ -160,3 +161,13 @@ void APlayer_Character::LookUpAtRate(float Rate)
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
+void APlayer_Character::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction)
+{
+	Super::TickActor(DeltaTime, TickType, ThisTickFunction);
+
+	if (UGameplayStatics::GetPlayerController(GetWorld(), 0) != nullptr)
+	{
+		APlayer_Controller* EPC = Cast<APlayer_Controller>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+		EPC->PortalManager->Update(DeltaTime);
+	}
+}

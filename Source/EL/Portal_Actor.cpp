@@ -7,12 +7,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "Player_Controller.h"
 
-// Sets default values
-APortal_Actor::APortal_Actor()
-{
-
-}
-
 APortal_Actor::APortal_Actor(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
@@ -118,113 +112,108 @@ bool APortal_Actor::IsPointCrossingPortal(FVector Point, FVector PortalLocation,
 
 void APortal_Actor::TeleportActor(AActor* ActorToTeleport)
 {
-    if (ActorToTeleport == nullptr || Target == nullptr)
     {
-        return;
-    }
-
-    //-------------------------------
-    //Retrieve and save Player Velocity
-    //(from the Movement Component)
-    //-------------------------------
-    FVector SavedVelocity = FVector::ZeroVector;
-    APlayer_Character* EC = nullptr;
-
-    if (ActorToTeleport->IsA(APlayer_Character::StaticClass()))
-    {
-        EC = Cast<APlayer_Character>(ActorToTeleport);
-
-        SavedVelocity = EC->GetMovementComponent()->Velocity;
-    }
-
-    //-------------------------------
-    //Compute and apply new location
-    //-------------------------------
-
-    FHitResult HitResult;
-    FVector NewLocation = ConvertLocationToActorSpace(ActorToTeleport->GetActorLocation(),
-        this,
-        Target);
-
-    ActorToTeleport->SetActorLocation(NewLocation,
-        false,
-        &HitResult,
-        ETeleportType::TeleportPhysics);
-
-    //-------------------------------
-    //Compute and apply new rotation
-    //-------------------------------
-
-    FRotator NewRotation = ConvertRotationToActorSpace(ActorToTeleport->GetActorRotation(),
-        this,
-        Target);
-
-    //Apply new rotation
-    ActorToTeleport->SetActorRotation(NewRotation);
-
-    //-------------------------------
-    //If we are teleporting a character we need to
-    //update its controller as well and reapply its velocity
-    //-------------------------------
-    if (ActorToTeleport->IsA(APlayer_Character::StaticClass()))
-    {
-        //Update Controller
-        APlayerController * EPC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-
-        if (EPC != nullptr)
+        if (ActorToTeleport == nullptr || Target == nullptr)
         {
-            NewRotation = ConvertRotationToActorSpace(EPC->GetControlRotation(),
-                this,
-                Target);
-
-            EPC->SetControlRotation(NewRotation);
+            return;
         }
 
-        //Reapply Velocity (Need to reorient direction into local space of Portal)
+        //-------------------------------
+        //Retrieve and save Player Velocity
+        //(from the Movement Component)
+        //-------------------------------
+        FVector SavedVelocity = FVector::ZeroVector;
+        APlayer_Character* EC = nullptr;
+
+        if (ActorToTeleport->IsA(APlayer_Character::StaticClass()))
         {
-            FVector Dots;
-            Dots.X = FVector::DotProduct(SavedVelocity, GetActorForwardVector());
-            Dots.Y = FVector::DotProduct(SavedVelocity, GetActorRightVector());
-            Dots.Z = FVector::DotProduct(SavedVelocity, GetActorUpVector());
+            EC = Cast<APlayer_Character>(ActorToTeleport);
 
-            FVector NewVelocity = Dots.X * Target->GetActorForwardVector()
-                + Dots.Y * Target->GetActorRightVector()
-                + Dots.Z * Target->GetActorUpVector();
-
-            EC->GetMovementComponent()->Velocity = NewVelocity;
+            SavedVelocity = EC->GetVelocity();
         }
-    }
 
-    //Cleanup Teleport
-    LastPosition = NewLocation;
+        //-------------------------------
+        //Compute and apply new location
+        //-------------------------------
+        FHitResult HitResult;
+        FVector NewLocation = ConvertLocationToActorSpace(ActorToTeleport->GetActorLocation(), this);
+
+        ActorToTeleport->SetActorLocation(NewLocation,
+            false,
+            &HitResult,
+            ETeleportType::TeleportPhysics);
+
+        //-------------------------------
+        //Compute and apply new rotation
+        //-------------------------------
+        FRotator NewRotation = ConvertRotationToActorSpace(ActorToTeleport->GetActorRotation(), this);
+
+        //Apply new rotation
+        ActorToTeleport->SetActorRotation(NewRotation);
+
+        //-------------------------------
+        //If we are teleporting a character we need to
+        //update its controller as well and reapply its velocity
+        //-------------------------------
+        if (ActorToTeleport->IsA(APlayer_Character::StaticClass()))
+        {
+            //Update Controller
+            APlayer_Controller* EPC = Cast<APlayer_Controller>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+
+            if (EPC != nullptr)
+            {
+                NewRotation = ConvertRotationToActorSpace(EPC->GetControlRotation(), this);
+
+                EPC->SetControlRotation(NewRotation);
+            }
+
+            //Reapply Velocity (Need to reorient direction into local space of Portal)
+            {
+                FVector Dots;
+                Dots.X = FVector::DotProduct(SavedVelocity, GetActorForwardVector());
+                Dots.Y = FVector::DotProduct(SavedVelocity, GetActorRightVector());
+                Dots.Z = FVector::DotProduct(SavedVelocity, GetActorUpVector());
+
+                FVector NewVelocity = Dots.X * Target->GetActorForwardVector()
+                    + Dots.Y * Target->GetActorRightVector()
+                    + Dots.Z * Target->GetActorUpVector();
+
+                EC->GetVelocity() = NewVelocity;
+            }
+        }
+
+        //Cleanup Teleport
+        LastPosition = NewLocation;
+    }
 }
 
 
-FVector APortal_Actor::ConvertLocationToActorSpace(FVector Location, AActor* Reference, AActor* TargetActor)
-{
-    if (Reference == nullptr || TargetActor == nullptr)
+FVector APortal_Actor::ConvertLocationToActorSpace(FVector Location, AActor * Reference)
     {
-        return FVector::ZeroVector;
+        if (Reference == nullptr || Target == nullptr)
+        {
+            return FVector::ZeroVector;
+        }
+
+        FVector Direction = Location - Reference->GetActorLocation();
+        FVector TargetLocation = Target->GetActorLocation();
+
+        FVector Dots;
+        Dots.X = FVector::DotProduct(Direction, Reference->GetActorForwardVector());
+        Dots.Y = FVector::DotProduct(Direction, Reference->GetActorRightVector());
+        Dots.Z = FVector::DotProduct(Direction, Reference->GetActorUpVector());
+
+        FVector NewDirection = Dots.X * Target->GetActorForwardVector()
+            + Dots.Y * Target->GetActorRightVector()
+            + Dots.Z * Target->GetActorUpVector();
+
+        return TargetLocation + NewDirection;
     }
 
-    FVector Direction = Location - Reference->GetActorLocation();
-    FVector TargetLocation = Target->GetActorLocation();
-
-    FVector Dots;
-    Dots.X = FVector::DotProduct(Direction, Reference->GetActorForwardVector());
-    Dots.Y = FVector::DotProduct(Direction, Reference->GetActorRightVector());
-    Dots.Z = FVector::DotProduct(Direction, Reference->GetActorUpVector());
-
-    FVector NewDirection = Dots.X * Target->GetActorForwardVector()
-        + Dots.Y * Target->GetActorRightVector()
-        + Dots.Z * Target->GetActorUpVector();
-
-    return TargetLocation + NewDirection;
-}
-
-FRotator APortal_Actor::ConvertRotationToActorSpace(FRotator Rotation, AActor* Reference, AActor* TargetActor)
+FRotator APortal_Actor::ConvertRotationToActorSpace(FRotator Rotation, AActor* Reference)
 {
-    if (Reference == nullptr || TargetActor == nullptr)
+
+    if (Reference == nullptr || Target == nullptr)
     {
         return FRotator::ZeroRotator;
     }
@@ -237,4 +226,51 @@ FRotator APortal_Actor::ConvertRotationToActorSpace(FRotator Rotation, AActor* R
     FQuat NewWorldQuat = TargetTransform.GetRotation() * LocalQuat;
 
     return NewWorldQuat.Rotator();
+}
+
+bool APortal_Actor::IsPointInsideBox(FVector Point, UBoxComponent* Box)
+{
+    if (Box != nullptr)
+    {
+        // From :
+        // https://stackoverflow.com/questions/52673935/check-if-3d-point-inside-a-box/52674010
+
+        FVector Center = Box->GetComponentLocation();
+        FVector Half = Box->GetScaledBoxExtent();
+        FVector DirectionX = Box->GetForwardVector();
+        FVector DirectionY = Box->GetRightVector();
+        FVector DirectionZ = Box->GetUpVector();
+
+        FVector Direction = Point - Center;
+
+        bool IsInside = FMath::Abs(FVector::DotProduct(Direction, DirectionX)) <= Half.X &&
+            FMath::Abs(FVector::DotProduct(Direction, DirectionY)) <= Half.Y &&
+            FMath::Abs(FVector::DotProduct(Direction, DirectionZ)) <= Half.Z;
+
+        return IsInside;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+APortalManager* APortal_Actor::GetPortalManager(AActor* Context)
+{
+    APortalManager* Manager = nullptr;
+
+    //Retrieve the World from the Context actor
+    if (Context != nullptr && Context->GetWorld() != nullptr)
+    {
+        //Find PlayerController
+        APlayer_Controller* EPC = Cast<APlayer_Controller>(Context->GetWorld()->GetFirstPlayerController());
+
+        //Retrieve the Portal Manager
+        if (EPC != nullptr && EPC->GetPortalManager() != nullptr)
+        {
+            Manager = EPC->GetPortalManager();
+        }
+    }
+
+    return Manager;
 }

@@ -208,7 +208,6 @@ void APortalManager::UpdateCapture(APortal_Actor* Portal)
 	{
 		Character = Cast<APlayer_Character>(*ActorItr);
 	}
-
 	//-----------------------------------
 	// Update SceneCapture (discard if there is no active portal)
 	//-----------------------------------
@@ -228,32 +227,20 @@ void APortalManager::UpdateCapture(APortal_Actor* Portal)
 			// Compute new location in the space of the target actor
 			// (which may not be aligned to world)
 			//-------------------------------
-			FVector NewLocation = Portal->ConvertLocationToActorSpace(PlayerCamera->GetComponentLocation(),
-				Portal);
+			FVector NewLocation = Portal->ConvertLocationToActorSpace(PlayerCamera->GetComponentLocation(),	Portal);
+			NewLocation = NewLocation.MirrorByPlane(FPlane(Target->GetActorLocation(), Target->GetActorForwardVector()));
 
 			SceneCapture->SetWorldLocation(NewLocation);
 
-			//-------------------------------
-			//Compute new Rotation in the space of the
-			//Target location
-			//-------------------------------
-			FTransform CameraTransform = PlayerCamera->GetComponentTransform();
-			FTransform SourceTransform = Portal->GetActorTransform();
-			FTransform TargetTransform = Target->GetActorTransform();
-
-			FQuat LocalQuat = SourceTransform.GetRotation().Inverse() * CameraTransform.GetRotation();
-			FQuat NewWorldQuat = TargetTransform.GetRotation() * LocalQuat;
-
-			//Update SceneCapture rotation
-			SceneCapture->SetRelativeRotation(NewWorldQuat);
 
 			//-------------------------------
 			//Clip Plane : to ignore objects between the
 			//SceneCapture and the Target of the portal
 			//-------------------------------
+
 			SceneCapture->ClipPlaneNormal = Target->GetActorForwardVector();
-			SceneCapture->ClipPlaneBase = Target->GetActorLocation()
-				+ (SceneCapture->ClipPlaneNormal * -1.5f); //Offset to avoid visible pixel border
+			SceneCapture->ClipPlaneBase = Target->GetActorLocation();
+
 		}
 
 		// Switch on the valid Portal

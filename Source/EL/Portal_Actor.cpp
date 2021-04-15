@@ -130,6 +130,7 @@ void APortal_Actor::TeleportActor(AActor* ActorToTeleport)
             EC = Cast<APlayer_Character>(ActorToTeleport);
 
             SavedVelocity = EC->GetVelocity();
+
         }
 
         //-------------------------------
@@ -147,9 +148,8 @@ void APortal_Actor::TeleportActor(AActor* ActorToTeleport)
         //Compute and apply new rotation
         //-------------------------------
         FRotator NewRotation = ConvertRotationToActorSpace(ActorToTeleport->GetActorRotation(), this);
-
-        //Apply new rotation
-        ActorToTeleport->SetActorRotation(NewRotation);
+        
+        
 
         //-------------------------------
         //If we are teleporting a character we need to
@@ -163,7 +163,7 @@ void APortal_Actor::TeleportActor(AActor* ActorToTeleport)
             if (EPC != nullptr)
             {
                 NewRotation = ConvertRotationToActorSpace(EPC->GetControlRotation(), this);
-
+                NewRotation.Yaw += 180.f;
                 EPC->SetControlRotation(NewRotation);
             }
 

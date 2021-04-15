@@ -229,9 +229,11 @@ void APortalManager::UpdateCapture(APortal_Actor* Portal)
 			//-------------------------------
 			FVector NewLocation = Portal->ConvertLocationToActorSpace(PlayerCamera->GetComponentLocation(),	Portal);
 			NewLocation = NewLocation.MirrorByPlane(FPlane(Target->GetActorLocation(), Target->GetActorForwardVector()));
+			NewLocation = NewLocation.MirrorByPlane(FPlane(Target->GetActorLocation(), Target->GetActorRightVector()));
+			
+
 
 			SceneCapture->SetWorldLocation(NewLocation);
-
 
 			//-------------------------------
 			//Clip Plane : to ignore objects between the

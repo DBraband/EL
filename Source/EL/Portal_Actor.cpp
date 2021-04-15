@@ -149,7 +149,6 @@ void APortal_Actor::TeleportActor(AActor* ActorToTeleport)
         //-------------------------------
         FRotator NewRotation = ConvertRotationToActorSpace(ActorToTeleport->GetActorRotation(), this);
         
-        
 
         //-------------------------------
         //If we are teleporting a character we need to

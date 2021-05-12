@@ -18,7 +18,7 @@ APlayer_Character::APlayer_Character()
 	BaseTurnRate = 45.f;
 	BaseLookUpRate = 45.f;
 
-	// Create a CameraComponent	
+	// Create a CameraComponent
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
 	FirstPersonCameraComponent->SetRelativeLocation(FVector(-39.56f, 1.75f, 64.f)); // Position the camera
@@ -39,16 +39,14 @@ APlayer_Character::APlayer_Character()
 
 	// Default offset from the character location for projectiles to spawn
 	GunOffset = FVector(100.0f, 0.0f, 10.0f);
-
 }
 
 void APlayer_Character::BeginPlay()
 {
-	// Call the base class  
+	// Call the base class
 	Super::BeginPlay();
 
 	Mesh1P->SetHiddenInGame(false, true);
-	
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -76,13 +74,16 @@ void APlayer_Character::SetupPlayerInputComponent(class UInputComponent* PlayerI
 	PlayerInputComponent->BindAxis("LookUpRate", this, &APlayer_Character::LookUpAtRate);
 }
 
-
 void APlayer_Character::MoveForward(float Value)
 {
 	if (Value != 0.0f)
 	{
 		// add movement in that direction
 		AddMovementInput(GetActorForwardVector(), Value);
+
+		if (headBob != NULL) {
+			GetWorld()->GetFirstPlayerController()->PlayerCameraManager->PlayCameraShake(headBob, Value);
+		}
 	}
 }
 
@@ -92,6 +93,10 @@ void APlayer_Character::MoveRight(float Value)
 	{
 		// add movement in that direction
 		AddMovementInput(GetActorRightVector(), Value);
+	}
+
+	if (headBob != NULL) {
+		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->PlayCameraShake(headBob, Value);
 	}
 }
 

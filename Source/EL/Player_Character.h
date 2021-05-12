@@ -20,6 +20,10 @@ class EL_API APlayer_Character : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class UCameraComponent* FirstPersonCameraComponent;
 
+	/** camera shake - head bobbing */
+	UPROPERTY(EditAnywhere)
+		TSubclassOf<UCameraShake> headBob;
+
 	/** Spring Arm */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class USpringArmComponent* WeaponSwayComp;

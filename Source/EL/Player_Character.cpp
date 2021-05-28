@@ -119,6 +119,10 @@ void APlayer_Character::TickActor(float DeltaTime, enum ELevelTick TickType, FAc
 	if (UGameplayStatics::GetPlayerController(GetWorld(), 0) != nullptr)
 	{
 		APlayer_Controller* EPC = Cast<APlayer_Controller>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
-		EPC->PortalManager->Update(DeltaTime);
+		if (EPC != nullptr) {
+			if (EPC->PortalManager != NULL) {
+				EPC->PortalManager->Update(DeltaTime);
+			}
+		}
 	}
 }

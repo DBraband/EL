@@ -1,12 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+#include "PortalManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Actor.h"
 #include "Camera/CameraComponent.h"
 #include "Player_Controller.h"
 #include "Player_Character.h"
 #include "UObject/UObjectGlobals.h"
-#include "PortalManager.h"
 #include "EngineUtils.h"
 
 // Sets default values
@@ -22,7 +22,7 @@ APortalManager::APortalManager(const FObjectInitializer& ObjectInitializer)
 
 	SceneCapture = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("PortalSceneCapture"));
 	SceneCapture->SetWorldLocation(FVector::ZeroVector);
-	SceneCapture->AttachToComponent(GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
+	SceneCapture->SetupAttachment(GetRootComponent());
 	
 
 	//------------------------------------------------
